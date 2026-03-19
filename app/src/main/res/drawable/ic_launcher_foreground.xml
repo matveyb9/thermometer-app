@@ -4,12 +4,15 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Корпус термометра -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,20a8,8 0,0 0,-8 8L46,68a14,14 0,1 0,16 0L62,28a8,8 0,0 0,-8 -8zM54,24a4,4 0,0 1,4 4L58,70.3A10,10 0,1 1,44 70.3L44,28a4,4 0,0 1,4 -4z" />
-    <circle
+        android:pathData="M54,20a8,8 0,0 0,-8 8L46,68a14,14 0,1 0,16 0L62,28a8,8 0,0 0,-8 -8zM54,24a4,4 0,0 1,4 4L58,69.5A10,10 0,1 1,44 69.5L44,28a4,4 0,0 1,4 -4z" />
+
+    <!-- Шарик термометра (circle через path) -->
+    <path
         android:fillColor="#FFFFFF"
-        android:cx="54"
-        android:cy="80"
-        android:r="7" />
+        android:pathData="M54,73m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0" />
+
 </vector>
