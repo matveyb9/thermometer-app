@@ -1,0 +1,2 @@
+-keep class ru.matveyb9.diy.thermometerapp.** { *; }
+-keep class com.hoho.android.usbserial.** { *; }

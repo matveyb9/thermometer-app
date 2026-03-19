@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Arduino Uno/Mega (ATmega16U2, CDC) -->
+    <usb-device vendor-id="9025" />
+    <!-- CH340 (Arduino-клоны) -->
+    <usb-device vendor-id="6790" />
+    <!-- FTDI FT232 -->
+    <usb-device vendor-id="1027" />
+    <!-- CP210x (Silicon Labs) -->
+    <usb-device vendor-id="4292" />
+    <!-- PL2303 -->
+    <usb-device vendor-id="1659" />
+</resources>

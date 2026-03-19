@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- FIX #6: app_name определён только в auto/res/values/strings.xml
+         и manual/res/values/strings.xml, чтобы не было конфликта ресурсов -->
+</resources>

@@ -1,0 +1,82 @@
+[versions]
+agp                    = "9.0.0"
+kotlin                 = "2.2.10"
+ksp                    = "2.2.10-2.0.2"
+
+coreKtx                = "1.17.0"
+activityCompose        = "1.11.0"
+lifecycleRuntimeKtx    = "2.9.0"
+
+composeBom             = "2026.03.00"
+navigationCompose      = "2.9.0"
+
+hilt                   = "2.57"
+hiltNavigationCompose  = "1.3.0"
+
+room                   = "2.7.0"
+
+retrofit               = "3.0.0"
+okhttp                 = "4.12.0"
+
+coroutines             = "1.10.2"
+serializationJson      = "1.8.0"
+
+usbSerial              = "3.4.6"
+vico                   = "3.0.0"
+capturable             = "3.0.1"
+
+junit                  = "4.13.2"
+junitExt               = "1.3.0"
+espresso               = "3.7.0"
+
+[plugins]
+android-application    = { id = "com.android.application",                    version.ref = "agp" }
+kotlin-compose         = { id = "org.jetbrains.kotlin.plugin.compose",        version.ref = "kotlin" }
+kotlin-serialization   = { id = "org.jetbrains.kotlin.plugin.serialization",  version.ref = "kotlin" }
+ksp                    = { id = "com.google.devtools.ksp",                     version.ref = "ksp" }
+hilt                   = { id = "com.google.dagger.hilt.android",              version.ref = "hilt" }
+
+[libraries]
+androidx-core-ktx                  = { group = "androidx.core",      name = "core-ktx",                   version.ref = "coreKtx" }
+androidx-activity-compose          = { group = "androidx.activity",  name = "activity-compose",            version.ref = "activityCompose" }
+androidx-lifecycle-runtime         = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx",       version.ref = "lifecycleRuntimeKtx" }
+androidx-lifecycle-viewmodel       = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose",   version.ref = "lifecycleRuntimeKtx" }
+# FIX #9 — ProcessLifecycleOwner scope
+androidx-lifecycle-process         = { group = "androidx.lifecycle", name = "lifecycle-process",           version.ref = "lifecycleRuntimeKtx" }
+
+compose-bom                = { group = "androidx.compose",           name = "compose-bom",                version.ref = "composeBom" }
+compose-ui                 = { group = "androidx.compose.ui",        name = "ui" }
+compose-ui-graphics        = { group = "androidx.compose.ui",        name = "ui-graphics" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui",        name = "ui-tooling-preview" }
+compose-ui-tooling         = { group = "androidx.compose.ui",        name = "ui-tooling" }
+compose-ui-test-manifest   = { group = "androidx.compose.ui",        name = "ui-test-manifest" }
+compose-ui-test-junit4     = { group = "androidx.compose.ui",        name = "ui-test-junit4" }
+compose-material3          = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons     = { group = "androidx.compose.material",  name = "material-icons-extended" }
+
+navigation-compose         = { group = "androidx.navigation",        name = "navigation-compose",          version.ref = "navigationCompose" }
+# FIX #4 — type-safe navigation
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx",     name = "kotlinx-serialization-json",  version.ref = "serializationJson" }
+
+hilt-android            = { group = "com.google.dagger", name = "hilt-android",           version.ref = "hilt" }
+hilt-compiler           = { group = "com.google.dagger", name = "hilt-android-compiler",  version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt",     name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+
+room-runtime   = { group = "androidx.room", name = "room-runtime",  version.ref = "room" }
+room-ktx       = { group = "androidx.room", name = "room-ktx",      version.ref = "room" }
+room-compiler  = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+retrofit       = { group = "com.squareup.retrofit2", name = "retrofit",            version.ref = "retrofit" }
+retrofit-gson  = { group = "com.squareup.retrofit2", name = "converter-gson",      version.ref = "retrofit" }
+okhttp-logging = { group = "com.squareup.okhttp3",   name = "logging-interceptor", version.ref = "okhttp" }
+
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+usb-serial   = { group = "com.github.mik3y",               name = "usb-serial-for-android", version.ref = "usbSerial" }
+vico-compose = { group = "com.patrykandpatrick.vico",       name = "compose-m3-android",     version.ref = "vico" }
+capturable   = { group = "dev.shreyaspatil",                name = "capturable",             version.ref = "capturable" }
+
+junit      = { group = "junit",                   name = "junit",           version.ref = "junit" }
+junit-ext  = { group = "androidx.test.ext",       name = "junit",           version.ref = "junitExt" }
+espresso   = { group = "androidx.test.espresso",  name = "espresso-core",   version.ref = "espresso" }
