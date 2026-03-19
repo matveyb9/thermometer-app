@@ -5,6 +5,9 @@ workflows:
     environment:
       java: 17
     scripts:
+      - name: Generate gradle-wrapper.jar
+        script: gradle wrapper --gradle-version=8.11.1
+
       - name: Set gradlew executable
         script: chmod +x gradlew
 
