@@ -72,6 +72,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=kotlin.RequiresOptIn",
+        )
+    }
+
     buildFeatures { compose = true }
 
     packaging {
