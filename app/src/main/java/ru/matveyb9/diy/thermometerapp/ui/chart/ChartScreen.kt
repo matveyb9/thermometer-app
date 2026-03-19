@@ -1,7 +1,10 @@
 package ru.matveyb9.diy.thermometerapp.ui.chart
 
 import android.content.Intent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
@@ -9,7 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -17,18 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomCartesianAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartCartesianAxis
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import dev.shreyaspatil.capturable.capturable
 import dev.shreyaspatil.capturable.controller.rememberCaptureController
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import ru.matveyb9.diy.thermometerapp.data.model.*
 import ru.matveyb9.diy.thermometerapp.ui.common.TemperatureUnitToggle
 
@@ -55,7 +53,9 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
                     putExtra(Intent.EXTRA_STREAM, result.uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                context.startActivity(Intent.createChooser(shareIntent, "Экспорт ${result.format.label}"))
+                context.startActivity(
+                    Intent.createChooser(shareIntent, "Экспорт ${result.format.label}")
+                )
             }
         }
     }
@@ -89,6 +89,7 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        // Мини-температура + кнопка экспорта
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -110,6 +111,7 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
             }
         }
 
+        // График
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,7 +122,11 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
             if (history.isEmpty()) {
                 EmptyChartPlaceholder(isConnected = isConnected, isRecording = isRecording)
             } else {
-                TemperatureChart(history = history, unit = unit, modifier = Modifier.fillMaxSize())
+                TemperatureChart(
+                    history  = history,
+                    unit     = unit,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
 
@@ -137,6 +143,91 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
     }
 }
 
+// ── График через Canvas ───────────────────────────────────────────────────────
+
+@Composable
+private fun TemperatureChart(
+    history: List<TemperatureRecord>,
+    unit: TemperatureUnit,
+    modifier: Modifier = Modifier,
+) {
+    val lineColor  = MaterialTheme.colorScheme.primary
+    val gridColor  = MaterialTheme.colorScheme.outlineVariant
+    val labelColor = MaterialTheme.colorScheme.onSurface
+
+    // Конвертируем все значения в нужные единицы
+    val values = remember(history, unit) {
+        history.map { it.temperatureCelsius.toDisplayTemp(unit) }
+    }
+    val times = remember(history) { history.map { it.elapsedSeconds } }
+
+    val minVal = values.minOrNull() ?: 0f
+    val maxVal = values.maxOrNull() ?: 1f
+    val valRange = if (maxVal - minVal < 1f) 1f else maxVal - minVal
+
+    val minTime = times.firstOrNull() ?: 0f
+    val maxTime = times.lastOrNull() ?: 1f
+    val timeRange = if (maxTime - minTime < 1f) 1f else maxTime - minTime
+
+    Canvas(modifier = modifier.padding(start = 48.dp, end = 8.dp, top = 8.dp, bottom = 32.dp)) {
+        val w = size.width
+        val h = size.height
+
+        // Сетка — 5 горизонтальных линий
+        val gridPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.argb(80, 128, 128, 128)
+            strokeWidth = 1.dp.toPx()
+        }
+        val textPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.GRAY
+            textSize = 10.sp.toPx()
+            textAlign = android.graphics.Paint.Align.RIGHT
+        }
+
+        for (i in 0..4) {
+            val y = h * i / 4f
+            drawContext.canvas.nativeCanvas.drawLine(-44.dp.toPx(), y, w, y, gridPaint)
+            val label = "%.1f".format(maxVal - (valRange * i / 4f))
+            drawContext.canvas.nativeCanvas.drawText(label, -4.dp.toPx(), y + 4.dp.toPx(), textPaint)
+        }
+
+        // Ось X — временны́е метки
+        val xLabelPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.GRAY
+            textSize = 10.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+        for (i in 0..4) {
+            val x = w * i / 4f
+            val timeSec = minTime + timeRange * i / 4f
+            val label = if (timeSec < 60) "${timeSec.toInt()}s"
+                        else "${(timeSec / 60).toInt()}m${(timeSec % 60).toInt()}s"
+            drawContext.canvas.nativeCanvas.drawText(label, x, h + 20.dp.toPx(), xLabelPaint)
+        }
+
+        // Линия графика
+        if (values.size < 2) return@Canvas
+        val path = Path()
+        values.forEachIndexed { index, value ->
+            val x = w * (times[index] - minTime) / timeRange
+            val y = h * (1f - (value - minVal) / valRange)
+            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(
+            path  = path,
+            color = lineColor,
+            style = Stroke(width = 2.dp.toPx()),
+        )
+
+        // Последняя точка
+        val lastX = w * (times.last() - minTime) / timeRange
+        val lastY = h * (1f - (values.last() - minVal) / valRange)
+        drawCircle(color = lineColor, radius = 4.dp.toPx(), center = Offset(lastX, lastY))
+    }
+}
+
+// ── Остальные компоненты ─────────────────────────────────────────────────────
+
 @Composable
 private fun MiniTemperatureHeader(
     state: ConnectionState,
@@ -150,7 +241,6 @@ private fun MiniTemperatureHeader(
         else -> "--.-°"
     }
     val isLoss = state is ConnectionState.Connected && state.packetLoss
-
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -171,39 +261,6 @@ private fun MiniTemperatureHeader(
             )
         }
     }
-}
-
-@Composable
-private fun TemperatureChart(
-    history: List<TemperatureRecord>,
-    unit: TemperatureUnit,
-    modifier: Modifier = Modifier,
-) {
-    val modelProducer = remember { CartesianChartModelProducer.build() }
-
-    LaunchedEffect(history, unit) {
-        withContext(Dispatchers.Default) {
-            modelProducer.tryRunTransaction {
-                lineSeries {
-                    series(
-                        x = history.map { it.elapsedSeconds },
-                        y = history.map { it.temperatureCelsius.toDisplayTemp(unit) },
-                    )
-                }
-            }
-        }
-    }
-
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberLineCartesianLayer(),
-            startAxis  = rememberStartCartesianAxis(),
-            bottomAxis = rememberBottomCartesianAxis(),
-        ),
-        modelProducer = modelProducer,
-        scrollState   = rememberVicoScrollState(scrollEnabled = true),
-        modifier      = modifier,
-    )
 }
 
 @Composable
@@ -234,13 +291,16 @@ private fun RecordingControls(
         verticalAlignment     = Alignment.CenterVertically,
     ) {
         if (!isRecording) {
-            Button(onClick = onStart, enabled = isConnected, modifier = Modifier.weight(1f)) {
-                Text("Старт")
-            }
+            Button(
+                onClick  = onStart,
+                enabled  = isConnected,
+                modifier = Modifier.weight(1f),
+            ) { Text("Старт") }
         } else {
-            OutlinedButton(onClick = onStop, modifier = Modifier.weight(1f)) {
-                Text("Стоп")
-            }
+            OutlinedButton(
+                onClick  = onStop,
+                modifier = Modifier.weight(1f),
+            ) { Text("Стоп") }
         }
         OutlinedButton(
             onClick  = onClear,
@@ -271,7 +331,6 @@ private fun ExportFormatPicker(
             fontWeight = FontWeight.Bold,
             modifier   = Modifier.padding(vertical = 16.dp),
         )
-
         ExportFormat.entries.forEach { format ->
             val enabled = when (format) {
                 ExportFormat.CSV -> hasHistory && !isExporting
@@ -285,16 +344,20 @@ private fun ExportFormatPicker(
             }
             ListItem(
                 headlineContent   = { Text(format.label) },
-                supportingContent = { Text(description, color = MaterialTheme.colorScheme.outline) },
-                modifier = if (enabled) Modifier.fillMaxWidth().clickable { onSelect(format) }
-                           else Modifier.fillMaxWidth(),
-                colors   = if (!enabled)
+                supportingContent = {
+                    Text(description, color = MaterialTheme.colorScheme.outline)
+                },
+                modifier = if (enabled)
+                    Modifier.fillMaxWidth().clickable { onSelect(format) }
+                else
+                    Modifier.fillMaxWidth(),
+                colors = if (!enabled)
                     ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.outline)
-                else ListItemDefaults.colors(),
+                else
+                    ListItemDefaults.colors(),
             )
             HorizontalDivider()
         }
-
         Spacer(Modifier.height(8.dp))
         OutlinedButton(
             onClick  = onDismiss,

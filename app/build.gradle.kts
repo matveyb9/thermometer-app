@@ -116,7 +116,6 @@ dependencies {
     implementation(libs.coroutines.android)
 
     implementation(libs.usb.serial)
-    implementation(libs.vico.compose)
     implementation(libs.capturable)
 
     testImplementation(libs.junit)

@@ -23,7 +23,6 @@ coroutines             = "1.9.0"
 serializationJson      = "1.7.3"
 
 usbSerial              = "3.4.6"
-vico                   = "1.16.0"
 capturable             = "3.0.1"
 
 junit                  = "4.13.2"
@@ -76,8 +75,6 @@ okhttp-logging = { group = "com.squareup.okhttp3",   name = "logging-interceptor
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 usb-serial   = { group = "com.github.mik3y",               name = "usb-serial-for-android", version.ref = "usbSerial" }
-# vico 2.x — стабильная ветка, совместима с Compose BOM 2025.x
-vico-compose = { group = "com.patrykandpatrick.vico",       name = "compose-m3",             version.ref = "vico" }
 capturable   = { group = "dev.shreyaspatil",                name = "capturable",             version.ref = "capturable" }
 
 junit      = { group = "junit",                   name = "junit",           version.ref = "junit" }
