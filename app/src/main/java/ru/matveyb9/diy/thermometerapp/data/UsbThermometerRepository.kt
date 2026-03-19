@@ -196,7 +196,7 @@ class UsbThermometerRepository @Inject constructor(
             sb.clear()
             val deadline = System.currentTimeMillis() + BAUD_DETECT_TIMEOUT_MS
             while (System.currentTimeMillis() < deadline) {
-                val len = runCatching { port.read(buffer, 100) }.getOrElse { break }
+                val len = try { port.read(buffer, 100) } catch (e: Exception) { break }
                 if (len > 0) {
                     sb.append(String(buffer, 0, len, Charsets.UTF_8))
                     if (TEMPERATURE_REGEX.containsMatchIn(sb)) return baud.value

@@ -23,7 +23,7 @@ coroutines             = "1.9.0"
 serializationJson      = "1.7.3"
 
 usbSerial              = "3.4.6"
-vico                   = "2.0.1"
+vico                   = "1.16.0"
 capturable             = "3.0.1"
 
 junit                  = "4.13.2"

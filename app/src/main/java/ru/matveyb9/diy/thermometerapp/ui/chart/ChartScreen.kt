@@ -1,6 +1,7 @@
 package ru.matveyb9.diy.thermometerapp.ui.chart
 
 import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
@@ -29,7 +30,7 @@ import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.matveyb9.diy.thermometerapp.data.model.*
-import ru.matveyb9.diy.thermometerapp.ui.common.TemperatureUnitToggle // FIX #3
+import ru.matveyb9.diy.thermometerapp.ui.common.TemperatureUnitToggle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,12 +42,11 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
     val unit            by viewModel.unit.collectAsStateWithLifecycle()
     val isExporting     by viewModel.isExporting.collectAsStateWithLifecycle()
 
-    val isConnected     = connectionState is ConnectionState.Connected
+    val isConnected       = connectionState is ConnectionState.Connected
     val captureController = rememberCaptureController()
     var lastBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var showExportSheet by remember { mutableStateOf(false) }
 
-    // Обработка результата экспорта
     LaunchedEffect(Unit) {
         viewModel.exportResult.collect { result ->
             if (result is ExportResult.Success) {
@@ -60,12 +60,9 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
         }
     }
 
-    // Захват bitmap при каждом новом пакете данных
     LaunchedEffect(history.size) {
         if (history.isNotEmpty()) {
-            runCatching {
-                lastBitmap = captureController.captureAsync().await()
-            }
+            runCatching { lastBitmap = captureController.captureAsync().await() }
         }
     }
 
@@ -92,7 +89,6 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // ── Мини-температура + кнопка экспорта ──
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -103,8 +99,8 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
                 modifier = Modifier.weight(1f),
             )
             IconButton(
-                onClick  = { showExportSheet = true },
-                enabled  = history.isNotEmpty() && !isExporting,
+                onClick = { showExportSheet = true },
+                enabled = history.isNotEmpty() && !isExporting,
             ) {
                 if (isExporting) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -114,7 +110,6 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
             }
         }
 
-        // ── График ──
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -125,15 +120,10 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
             if (history.isEmpty()) {
                 EmptyChartPlaceholder(isConnected = isConnected, isRecording = isRecording)
             } else {
-                TemperatureChart(
-                    history  = history,
-                    unit     = unit,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                TemperatureChart(history = history, unit = unit, modifier = Modifier.fillMaxSize())
             }
         }
 
-        // FIX #3: импорт из ui/common
         TemperatureUnitToggle(selected = unit, onSelect = viewModel::setUnit)
 
         RecordingControls(
@@ -146,8 +136,6 @@ fun ChartScreen(viewModel: ChartViewModel = hiltViewModel()) {
         )
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun MiniTemperatureHeader(
@@ -169,11 +157,11 @@ private fun MiniTemperatureHeader(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text      = text,
-            fontSize  = 28.sp,
+            text       = text,
+            fontSize   = 28.sp,
             fontWeight = FontWeight.Light,
-            color     = if (isLoss) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurface,
+            color      = if (isLoss) MaterialTheme.colorScheme.error
+                         else MaterialTheme.colorScheme.onSurface,
         )
         if (isLoss) {
             Text(
@@ -191,11 +179,11 @@ private fun TemperatureChart(
     unit: TemperatureUnit,
     modifier: Modifier = Modifier,
 ) {
-    val modelProducer = remember { CartesianChartModelProducer() }
+    val modelProducer = remember { CartesianChartModelProducer.build() }
 
     LaunchedEffect(history, unit) {
         withContext(Dispatchers.Default) {
-            modelProducer.runTransaction {
+            modelProducer.tryRunTransaction {
                 lineSeries {
                     series(
                         x = history.map { it.elapsedSeconds },
@@ -258,9 +246,7 @@ private fun RecordingControls(
             onClick  = onClear,
             enabled  = hasHistory && !isRecording,
             modifier = Modifier.weight(1f),
-        ) {
-            Text("Сброс")
-        }
+        ) { Text("Сброс") }
     }
 }
 
@@ -299,13 +285,12 @@ private fun ExportFormatPicker(
             }
             ListItem(
                 headlineContent   = { Text(format.label) },
-                supportingContent = {
-                    Text(description, color = MaterialTheme.colorScheme.outline)
-                },
-                modifier = if (enabled) Modifier.fillMaxWidth().clickableItem { onSelect(format) }
+                supportingContent = { Text(description, color = MaterialTheme.colorScheme.outline) },
+                modifier = if (enabled) Modifier.fillMaxWidth().clickable { onSelect(format) }
                            else Modifier.fillMaxWidth(),
-                colors   = if (!enabled) ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.outline)
-                           else ListItemDefaults.colors(),
+                colors   = if (!enabled)
+                    ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.outline)
+                else ListItemDefaults.colors(),
             )
             HorizontalDivider()
         }
@@ -317,6 +302,3 @@ private fun ExportFormatPicker(
         ) { Text("Отмена") }
     }
 }
-
-private fun Modifier.clickableItem(onClick: () -> Unit): Modifier =
-    this.then(androidx.compose.foundation.clickable(onClick = onClick))
