@@ -1,0 +1,24 @@
+workflows:
+  android-debug-all:
+    name: Both Flavors Debug
+    max_build_duration: 30
+    environment:
+      java: 17
+    scripts:
+      - name: Generate Gradle wrapper
+        # Codemagic имеет Gradle предустановленным.
+        # Генерируем gradlew на месте — это стандартный подход
+        # когда wrapper не включён в репозиторий.
+        script: |
+          gradle wrapper --gradle-version=8.14
+          chmod +x gradlew
+
+      - name: Build Auto Debug APK
+        script: ./gradlew assembleAutoDebug --stacktrace
+
+      - name: Build Manual Debug APK
+        script: ./gradlew assembleManualDebug --stacktrace
+
+    artifacts:
+      - app/build/outputs/apk/auto/debug/*.apk
+      - app/build/outputs/apk/manual/debug/*.apk
